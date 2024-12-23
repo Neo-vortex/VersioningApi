@@ -22,7 +22,18 @@ using (var scope = app.Services.CreateScope())
 
 app.MapOpenApi();
 app.MapScalarApiReference();
+app.Use(async (context, next) =>
+{
+    if (!context.Request.Headers.TryGetValue("secret", out var value) ||
+value != (Environment.GetEnvironmentVariable("SECRET") ?? "changeme"))
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsync("Forbidden: Invalid or missing 'secret' header.");
+        return; 
+    }
 
+    await next();
+});
 app.UseAuthorization();
 
 app.MapControllers();
