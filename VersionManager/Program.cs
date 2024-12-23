@@ -24,7 +24,7 @@ app.MapOpenApi();
 app.MapScalarApiReference();
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/scalar/v1"))
+    if (context.Request.Path.StartsWithSegments("/scalar") || context.Request.Path.StartsWithSegments("/openapi"))
     {
         await next(); 
         return;
