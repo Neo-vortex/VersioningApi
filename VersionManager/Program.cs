@@ -24,12 +24,18 @@ app.MapOpenApi();
 app.MapScalarApiReference();
 app.Use(async (context, next) =>
 {
+    if (context.Request.Path.StartsWithSegments("/scalar/v1"))
+    {
+        await next(); 
+        return;
+    }
+
     if (!context.Request.Headers.TryGetValue("secret", out var value) ||
-value != (Environment.GetEnvironmentVariable("SECRET") ?? "changeme"))
+        value != (Environment.GetEnvironmentVariable("SECRET") ?? "changeme"))
     {
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
         await context.Response.WriteAsync("Forbidden: Invalid or missing 'secret' header.");
-        return; 
+        return;
     }
 
     await next();
