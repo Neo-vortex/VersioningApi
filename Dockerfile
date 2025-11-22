@@ -19,5 +19,6 @@ RUN dotnet publish "VersionManager.csproj" -c $BUILD_CONFIGURATION -o /app/publi
 
 FROM base AS final
 WORKDIR /app
+RUN mkdir -p db
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "VersionManager.dll"]
