@@ -1,274 +1,323 @@
+# Version Manager API Documentation
 
-#Documentation
+This document describes how to use the Version Manager API to manage
+**projects**, **environments**, and **semantic versions**.
 
-This document outlines the details, usage, and scenarios of the API. It provides sample requests and responses, step-by-step guides, and detailed explanations of how to use the API effectively.
-
----
+------------------------------------------------------------------------
 
 ## Table of Contents
 
-1. [Introduction](#introduction)
-2. [Prerequisites](#prerequisites)
-3. [Authentication](#authentication)
-4. [API Endpoints](#api-endpoints)
-   - [Projects](#projects)
-   - [Environments](#environments)
-   - [Versions](#versions)
-5. [DTOs (Data Transfer Objects)](#dtos)
-6. [Scenarios](#scenarios)
-   - [Managing a Software with Dev and Staging Environments](#managing-a-software-with-dev-and-staging-environments)
-7. [Step-by-Step Usage Guide](#step-by-step-usage-guide)
+1.  Introduction
+2.  Prerequisites
+3.  Authentication
+4.  API Endpoints
+    -   Projects
+    -   Environments
+    -   Versions
+5.  DTOs (Data Transfer Objects)
+6.  Scenarios
+7.  Step-by-Step Usage Guide
 
----
+------------------------------------------------------------------------
 
 ## Introduction
 
-The **Version Manager API** allows you to manage projects, environments, and versions in a streamlined way. This API is designed for teams who need structured version control and environment management for their applications.
+The Version Manager API helps teams manage:
 
----
+-   Projects\
+-   Environments such as `dev`, `staging`, `production`\
+-   Semantic versions (`major.minor.patch`) for each environment
+
+It is designed for CI/CD pipelines, deployment systems, and
+configuration management.
+
+------------------------------------------------------------------------
 
 ## Prerequisites
 
-1. **Environment Configuration**:
-   - The API uses a `secret` header for authentication. You must set an environment variable `SECRET` with your chosen secret key. If not set, the default value is `"changeme"`.
-2. **Framework**:
-   - ASP.NET Core backend.
-3. **Dependencies**:
-   - Install necessary packages for `DapperContext`, `Scalar.AspNetCore`, and services.
+### 1. Secret Authentication
 
----
+Set an environment variable named `SECRET`:
+
+``` bash
+export SECRET=your-secret-key
+```
+
+All API requests must include:
+
+    secret: your-secret-key
+
+### 2. Technology Stack
+
+-   ASP.NET Core backend
+-   DapperContext for database handling
+-   Scalar.AspNetCore for API schema documentation
+
+------------------------------------------------------------------------
 
 ## Authentication
 
-The API uses a custom header `secret` for authentication. Requests must include this header to access protected endpoints.
+Requests require a `secret` header.
 
-### Example:
-```http
+### Example
+
+``` http
 GET /api/projects HTTP/1.1
-Host: yourdomain.com
 secret: your-secret-key
 ```
 
-If the header is missing or invalid, the API will respond with:
-```json
+If the header is missing or incorrect:
+
+``` json
 {
   "status": 403,
   "message": "Forbidden: Invalid or missing 'secret' header."
 }
 ```
 
-Set the environment variable in your application using:
-```bash
-export SECRET=your-secret-key
-```
-
----
+------------------------------------------------------------------------
 
 ## API Endpoints
 
-### Projects
+# Projects
 
-#### Create a Project
-**Endpoint**: `POST /api/projects`  
-**Request Body**:
-```json
-{
-  "name": "MySoftware",
-  "environments": ["dev", "staging"]
-}
+------------------------------------------------------------------------
+
+### Create Project
+
+**POST** `/api/Project`
+
+**Request Body (string JSON):**
+
+``` json
+"MyProject"
 ```
-**Response**:
-```json
+
+**Response**
+
+``` json
 {
   "projectId": 1,
-  "projectName": "MySoftware"
+  "projectName": "MyProject"
 }
 ```
 
-#### Get All Projects
-**Endpoint**: `GET /api/projects`  
-**Response**:
-```json
-[
-  {
-    "projectId": 1,
-    "projectName": "MySoftware"
-  }
-]
+------------------------------------------------------------------------
+
+### Get Project By ID
+
+**GET** `/api/Project/{id}`
+
+------------------------------------------------------------------------
+
+### Get All Projects
+
+**GET** `/api/Project`
+
+------------------------------------------------------------------------
+
+### Delete Project
+
+**DELETE** `/api/Project/{id}`\
+Returns: **204 No Content**
+
+------------------------------------------------------------------------
+
+### Create Environment (Via ProjectController)
+
+**POST** `/api/Project/{projectId}/Environment`
+
+**Request Body:**
+
+``` json
+"dev"
 ```
 
-#### Delete a Project
-**Endpoint**: `DELETE /api/projects/{id}`  
-**Response**: `204 No Content`
+------------------------------------------------------------------------
 
----
+### Get Environments (Via ProjectController)
 
-### Environments
+**GET** `/api/Project/{projectId}/Environment`
 
-#### Create an Environment
-**Endpoint**: `POST /api/projects/{projectId}/environments`  
-**Request Body**:
-```json
+------------------------------------------------------------------------
+
+# Environments
+
+This section corresponds to EnvironmentController.
+
+Base route:
+
+    /api/projects/{projectId}/environments
+
+------------------------------------------------------------------------
+
+### Get Environments
+
+**GET** `/api/projects/{projectId}/environments`
+
+------------------------------------------------------------------------
+
+### Create Environment
+
+**POST** `/api/projects/{projectId}/environments`
+
+**Request Body**
+
+``` json
 {
   "name": "dev"
 }
 ```
-**Response**:
-```json
-{
-  "environmentId": 1,
-  "name": "dev"
-}
-```
 
-#### Get Environments for a Project
-**Endpoint**: `GET /api/projects/{projectId}/environments`  
-**Response**:
-```json
-[
-  {
-    "environmentId": 1,
-    "name": "dev"
-  },
-  {
-    "environmentId": 2,
-    "name": "staging"
-  }
-]
-```
+------------------------------------------------------------------------
 
----
+### Update Environment
 
-### Versions
+**PUT**\
+`/api/projects/{projectId}/environments/{environmentId}`
 
-#### Get Current Version
-**Endpoint**: `GET /api/projects/{projectId}/{environment}/version`  
-**Response**:
-```json
-{
-  "projectId": 1,
-  "environment": "dev",
-  "version": "1.0.0"
-}
-```
+------------------------------------------------------------------------
 
-#### Set Version
-**Endpoint**: `PUT /api/projects/{projectId}/{environment}/version`  
-**Request Body**:
-```json
-{
-  "major": 1,
-  "minor": 1,
-  "patch": 0
-}
-```
-**Response**:
-```json
-{
-  "message": "Version updated successfully."
-}
-```
+### Delete Environment
 
----
+**DELETE**\
+`/api/projects/{projectId}/environments/{environmentId}`
+
+------------------------------------------------------------------------
+
+# Versions
+
+Base route:
+
+    /api/projects/{projectId}/{environment}/version
+
+------------------------------------------------------------------------
+
+### Get Current Version
+
+**GET** `/api/projects/{projectId}/{environment}/version`
+
+------------------------------------------------------------------------
+
+### Set Version
+
+**PUT** `/api/projects/{projectId}/{environment}/version`
+
+------------------------------------------------------------------------
+
+### Increment Version
+
+**POST** `/api/projects/{projectId}/{environment}/version/increment`
+
+------------------------------------------------------------------------
+
+### Decrement Version
+
+**POST** `/api/projects/{projectId}/{environment}/version/decrement`
+
+------------------------------------------------------------------------
 
 ## DTOs (Data Transfer Objects)
 
 ### CreateEnvironmentRequest
-```json
+
+``` json
 {
   "name": "string"
 }
 ```
 
-### CreateProjectRequest
-```json
+### UpdateEnvironmentRequest
+
+``` json
 {
-  "name": "string",
-  "environments": ["string"]
+  "name": "string"
 }
 ```
 
 ### SetVersionRequest
-```json
+
+``` json
 {
-  "major": "int",
-  "minor": "int",
-  "patch": "int"
+  "major": 0,
+  "minor": 0,
+  "patch": 0
 }
 ```
 
----
+### IncrementVersionRequest
+
+``` json
+{
+  "part": "major | minor | patch"
+}
+```
+
+### DecrementVersionRequest
+
+``` json
+{
+  "part": "major | minor | patch"
+}
+```
+
+------------------------------------------------------------------------
 
 ## Scenarios
 
-### Managing a Software with Dev and Staging Environments
+### Managing a Software With Dev and Staging Environments
 
-#### Scenario:
-You have a software project with two environments: `dev` and `staging`. You want to use the API to manage these environments and automate version updates during CI/CD.
+1.  Create a project
 
-**Steps**:
-1. **Create the Project**:
-   ```http
-   POST /api/projects
-   ```
-   **Request Body**:
-   ```json
-   {
-     "name": "MySoftware",
-     "environments": ["dev", "staging"]
-   }
-   ```
+``` http
+POST /api/Project
+"MySoftware"
+```
 
-2. **Get the Project's Environments**:
-   ```http
-   GET /api/projects/1/environments
-   ```
+2.  Create environments
 
-3. **Set the Version for `dev` Environment**:
-   ```http
-   PUT /api/projects/1/dev/version
-   ```
-   **Request Body**:
-   ```json
-   {
-     "major": 1,
-     "minor": 0,
-     "patch": 0
-   }
-   ```
+``` http
+POST /api/projects/1/environments
+{ "name": "dev" }
+```
 
-4. **Increment Version for `staging` During Deployment**:
-   ```http
-   POST /api/projects/1/staging/version/increment
-   ```
-   **Request Body**:
-   ```json
-   {
-     "part": "minor"
-   }
-   ```
+``` http
+POST /api/projects/1/environments
+{ "name": "staging" }
+```
 
-5. **Get the Updated Version for `staging`**:
-   ```http
-   GET /api/projects/1/staging/version
-   ```
+3.  Set version for dev
 
----
+``` http
+PUT /api/projects/1/dev/version
+{ "major": 1, "minor": 0, "patch": 0 }
+```
+
+4.  Increment version on staging
+
+``` http
+POST /api/projects/1/staging/version/increment
+{ "part": "minor" }
+```
+
+5.  Get version
+
+``` http
+GET /api/projects/1/staging/version
+```
+
+------------------------------------------------------------------------
 
 ## Step-by-Step Usage Guide
 
-1. Configure your `SECRET` key in the environment:
-   ```bash
-   export SECRET=your-secret-key
-   ```
+1.  Set your `SECRET` environment variable.
+2.  Create a project.
+3.  Add environments.
+4.  Use Version endpoints to manage versions per environment.
+5.  Integrate calls into CI/CD pipelines to automate version changes.
 
-2. Create a new project with environments.
-
-3. Use the API to manage versions across environments during CI/CD.
-
----
+------------------------------------------------------------------------
 
 ## Contact
 
-For any issues or questions, feel free to open an issue on the GitHub repository.
-
+For issues or support, open an issue in the GitHub repository.
