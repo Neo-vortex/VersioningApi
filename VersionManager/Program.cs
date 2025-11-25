@@ -21,10 +21,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.MapOpenApi();
-app.MapScalarApiReference();
+app.MapScalarApiReference("/docs", options =>
+{
+    options.WithTitle("API Version Manager");
+});
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/scalar") || context.Request.Path.StartsWithSegments("/openapi"))
+    if (context.Request.Path.StartsWithSegments("/docs") || context.Request.Path.StartsWithSegments("/openapi"))
     {
         await next(); 
         return;
